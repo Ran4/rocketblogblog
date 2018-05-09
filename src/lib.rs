@@ -27,6 +27,10 @@ pub fn get_post(post_id: &i32) -> Result<Post, diesel::result::Error> {
     posts.find(*post_id).get_result(&establish_connection())
 }
 
+pub fn get_latest_posts() -> Result<Vec<Post>, diesel::result::Error> {
+    posts.get_results(&establish_connection())
+}
+
 pub fn insert_post_into_db(new_post: &Post) -> Result<Post, diesel::result::Error> {
     let conn = establish_connection();
     diesel::insert_into(schema::posts::table)
