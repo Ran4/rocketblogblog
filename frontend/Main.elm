@@ -16,7 +16,7 @@ type alias Post =
     { id : PostId
     , number : Int
     }
-    
+
 type alias Model =
     { numberField : String
     , idToFetch : Int
@@ -34,13 +34,13 @@ type Action
     | DeletePost PostId
     | DeletePostResult (Result Http.Error PostId)
     | UpdateNumber String
-    
+
 examplePost : Post
 examplePost =
     { id = 0
     , number = 999
     }
-    
+
 initialModel : Model
 initialModel =
     { numberField = "993"
@@ -49,7 +49,7 @@ initialModel =
     , posts = []
     , status = "No status"
     }
-    
+
 -- JSON decoding/encoding
 --------------------------------------------------------------------
 newPostJson : String -> Result String Json.Encode.Value
@@ -62,19 +62,19 @@ newPostJson numberField =
             |> Ok
         Err e ->
             Err e
-                
+
 postDecoder : Decode.Decoder Post
 postDecoder =
     Decode.map2
         Post
         (Decode.field "id" Decode.int)
         (Decode.field "number" Decode.int)
-        
+
 postsDecoder : Decode.Decoder (List Post)
 postsDecoder =
     Decode.list postDecoder
-    
-    
+
+
 -- Update
 --------------------------------------------------------------------
 
@@ -84,11 +84,11 @@ baseUrl = "http://localhost:8000"
 get : String -> Decode.Decoder a -> Http.Request a
 get subUrl =
     Http.get (baseUrl ++ subUrl)
-    
+
 post : String -> Http.Body -> Decode.Decoder a -> Http.Request a
 post subUrl =
     Http.post (baseUrl ++ subUrl)
-        
+
 delete : String -> Http.Body -> Decode.Decoder a -> Http.Request a
 delete subUrl body jsonDecoder =
     Http.request
@@ -100,18 +100,18 @@ delete subUrl body jsonDecoder =
         , timeout = Nothing
         , withCredentials = False
         }
-            
+
 getLatestPosts : Http.Request (List Post)
 getLatestPosts =
     get "/post/latest" postsDecoder
-    
+
 deletePost : PostId -> Http.Request PostId
 deletePost postId =
     delete
         ("/post/" ++ toString postId)
         Http.emptyBody
         (Decode.int |> Decode.map (\x -> x))
-    
+
 sendPost : Json.Encode.Value -> Http.Request Post
 sendPost postJson =
     post "/post/" (Http.jsonBody postJson) postDecoder
@@ -149,9 +149,9 @@ update msg model =
             in ({ model | status = newStatus }, Cmd.none)
         UpdateNumber s ->
             ({ model | numberField = s, newPost = newPostJson s}, Cmd.none)
-            
-            
-        
+
+
+
 -- Views
 --------------------------------------------------------------------
 
@@ -162,9 +162,9 @@ bigButton =
     [ ("height", "30px")
     , ("width", "100px")
     ]
-    
+
 -- "Components"
-            
+
 fetchPostView : Model -> Html Action
 fetchPostView model =
     div []
@@ -176,8 +176,8 @@ fetchPostView model =
                     else text "Fetch posts again"
                 ]
         ]
-        
-        
+
+
 viewPost : Post -> Html Action
 viewPost post =
     div []
@@ -187,8 +187,10 @@ viewPost post =
                          ]
                  , onClick (DeletePost post.id)
                  ] [ text "Delete" ]
-        , text <| "Id: " ++ toString post.id ++ ", Number: " ++ toString post.number]
-        
+        , "Id: " ++ toString post.id ++ ", Number: " ++ toString post.number
+          |> text
+        ]
+
 fetchedPostsView : Model -> Html Action
 fetchedPostsView model =
     div [ style [ ("border-style", "dotted")
@@ -198,7 +200,7 @@ fetchedPostsView model =
         , div [] (List.map viewPost model.posts)
         , fetchPostView model
         ]
-            
+
 newPostView : Model -> Html Action
 newPostView model =
     div [ style [ ("border-style", "dotted")
@@ -210,7 +212,8 @@ newPostView model =
               ]
               [text "New post:"]
         , text "Number:"
-        , input [ value model.numberField, placeholder "42", onInput UpdateNumber ] []
+        , input [ value model.numberField
+                , placeholder "42", onInput UpdateNumber ] []
         , div [] (
             case model.newPost of
                 Ok value ->
@@ -223,7 +226,7 @@ newPostView model =
                               else "Waiting for input..."
                     ]
         )]
-            
+
 view : Model -> Html Action
 view model =
     div []
@@ -231,7 +234,7 @@ view model =
         , newPostView model
         , text <| "Status: " ++ model.status
         ]
-    
+
 main : Program Never Model Action
 main = Html.program
     { init = update FetchAll initialModel 
